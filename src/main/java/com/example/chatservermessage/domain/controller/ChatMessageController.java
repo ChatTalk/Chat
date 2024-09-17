@@ -14,7 +14,7 @@ import static com.example.chatservermessage.global.constant.Constants.CHAT_DESTI
 
 @Slf4j
 @RequiredArgsConstructor
-public class WebSocketMessageController {
+public class ChatMessageController {
 
     private final SimpMessageSendingOperations messagingTemplate;
 
