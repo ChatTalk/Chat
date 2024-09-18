@@ -39,6 +39,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         context.setAuthentication(createAuthentication(username, role));
         SecurityContextHolder.setContext(context);
 
+        log.info("인증 객체 생성 성공");
+
         filterChain.doFilter(request, response);
     }
 
