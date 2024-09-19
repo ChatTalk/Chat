@@ -1,11 +1,16 @@
 package com.example.chatservermessage.global.message;
 
+import com.example.chatservermessage.domain.dto.TokenDTO;
 import com.example.chatservermessage.domain.dto.UserInfoDTO;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -18,6 +23,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
+import reactor.kafka.receiver.KafkaReceiver;
+
+import java.time.Duration;
+import java.util.UUID;
 
 @Slf4j(topic = "WebSocketInterceptor")
 @Component
@@ -25,8 +36,16 @@ import org.springframework.stereotype.Component;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketInterceptor implements ChannelInterceptor {
 
+    @Value("${kafka.topic}")
+    private String topic;
+
+    private final ReactiveKafkaProducerTemplate<String, TokenDTO> kafkaProducerTemplate;
+    private final KafkaReceiver<String, UserInfoDTO> kafkaReceiver;
+
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        log.info("일단 여긴 도착했는지?");
+
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
@@ -36,16 +55,43 @@ public class WebSocketInterceptor implements ChannelInterceptor {
     }
 
     private void setAuthenticate(final StompHeaderAccessor accessor) {
-        String email = accessor.getFirstNativeHeader("email");
-        String role = accessor.getFirstNativeHeader("role");
+        String token = accessor.getFirstNativeHeader("Authorization");
+        UUID id = UUID.randomUUID();
+        log.info("추출된 토큰: {} // 아이디: {}", token, id);
 
-        UserInfoDTO userInfoDTO = new UserInfoDTO(email, role);
+        TokenDTO tokenDTO = new TokenDTO(id, token);
 
-        log.info("소켓 CONNECT 시도, 유저 이메일 : {} // 권한 : {}", email, role);
+        // 비동기적으로 Kafka에 인증 요청 전송
+        kafkaProducerTemplate.send(topic, id.toString(), tokenDTO)
+                .then(Mono.defer(() -> kafkaReceiver
+                        .receive()
+                        .filter(record -> record.key().equals(id.toString()))
+                        .next()
+                        .map(ConsumerRecord::value)
+                        .timeout(Duration.ofSeconds(10))
+                        .onErrorResume(e -> {
+                            // 인증 실패 시 처리
+                            log.error("Error during authentication", e);
+                            return Mono.empty(); // 인증 실패 시 빈 Mono를 반환
+                        })
+                ))
+                .doOnNext(userInfoDTO -> {
+                    if (userInfoDTO != null) {
+                        // 인증이 성공한 경우
+                        String email = userInfoDTO.getEmail();
+                        String role = userInfoDTO.getRole();
 
-        Authentication authentication = this.createAuthentication(userInfoDTO);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        accessor.setUser(authentication);
+                        log.info("소켓 CONNECT 시도, 유저 이메일 : {} // 권한 : {}", email, role);
+
+                        Authentication authentication = this.createAuthentication(userInfoDTO);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        accessor.setUser(authentication);
+                    } else {
+                        // 인증 실패 시 처리
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication failed");
+                    }
+                })
+                .subscribe(); // 비동기 작업을 시작합니다.
     }
 
     private Authentication createAuthentication(final UserInfoDTO userInfoDTO) {

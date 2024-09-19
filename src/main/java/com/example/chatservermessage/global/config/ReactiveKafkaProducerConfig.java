@@ -1,6 +1,6 @@
 package com.example.chatservermessage.global.config;
 
-import com.example.chatservermessage.domain.dto.UserInfoDTO;
+import com.example.chatservermessage.domain.dto.TokenDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ public class ReactiveKafkaProducerConfig {
     private String uri;
 
     @Bean
-    public ReactiveKafkaProducerTemplate<String, UserInfoDTO> kafkaTemplate() {
+    public ReactiveKafkaProducerTemplate<String, TokenDTO> kafkaTemplate() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, uri);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
