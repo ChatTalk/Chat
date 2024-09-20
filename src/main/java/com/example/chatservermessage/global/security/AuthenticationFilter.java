@@ -50,7 +50,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     // Authentication 객체 생성 (UPAT 생성)
     private Authentication createAuthentication(String username, String role) {
-        UserDetails userDetails = new UserDetailsImpl(new UserInfoDTO(username, role));
+        UserDetails userDetails = new UserDetailsImpl(username, role);
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }

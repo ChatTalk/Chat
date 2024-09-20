@@ -14,11 +14,12 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
-    private final UserInfoDTO userInfoDTO;
+    private final String email;
+    private final String role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(userInfoDTO.getRole());
+        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(role);
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(simpleGrantedAuthority);
         return authorities;
@@ -31,7 +32,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return userInfoDTO.getEmail();
+        return email;
     }
 
     @Override

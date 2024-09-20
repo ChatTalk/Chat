@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
@@ -13,6 +14,7 @@ import java.security.Principal;
 import static com.example.chatservermessage.global.constant.Constants.CHAT_DESTINATION;
 
 @Slf4j
+@Controller
 @RequiredArgsConstructor
 public class ChatMessageController {
 

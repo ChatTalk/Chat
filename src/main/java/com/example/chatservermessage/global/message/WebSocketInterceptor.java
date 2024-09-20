@@ -30,13 +30,16 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_ACCE
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketInterceptor implements ChannelInterceptor {
 
-    private RedisTemplate<String, UserInfoDTO> userInfoTemplate;
+    private final RedisTemplate<String, UserInfoDTO> userInfoTemplate;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        log.info("엑세스 명령: {}", accessor.getCommand());
+        log.info("메세지 헤더 확인 ㅠㅠ: {}", String.valueOf(accessor.getMessageHeaders()));
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+            log.info("인증 시작");
             this.setAuthenticate(accessor);
         }
         return message;
@@ -44,12 +47,27 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 
     private void setAuthenticate(final StompHeaderAccessor accessor) {
         String accessTokenValue = accessor.getFirstNativeHeader(COOKIE_AUTH_HEADER);
+        log.info("가지고 온 엑세스 토큰: {}", accessTokenValue);
 
-        UserInfoDTO dto = userInfoTemplate.opsForValue().get(REDIS_ACCESS_KEY + accessTokenValue);
+        if (accessTokenValue == null) {
+            log.info("엑세스 토큰 없음...?");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non access token");
+        }
+
+        String prefix = "Bearer ";
+        String prefixKey = "Bearer%20";
+        String accessToken = prefixKey + accessTokenValue.substring(prefix.length());
+
+        log.info("레디스 엑세스 토큰 캐시 키 확인: {}", accessToken);
+
+        UserInfoDTO dto = userInfoTemplate.opsForValue().get(REDIS_ACCESS_KEY + accessToken);
 
         if (dto == null) {
+            log.info("DTO 없음...?");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non cache access token");
         }
+
+        log.info("레디스로부터 가지고 온 DTO: {}", dto);
 
         // 좀 더 실용적인 인증 수단 마련 필요
         String email = dto.getEmail();
@@ -61,7 +79,7 @@ public class WebSocketInterceptor implements ChannelInterceptor {
     }
 
     private Authentication createAuthentication(final UserInfoDTO userInfoDTO) {
-        final UserDetails userDetails = new UserDetailsImpl(userInfoDTO);
+        final UserDetails userDetails = new UserDetailsImpl(userInfoDTO.getEmail(), userInfoDTO.getRole());
 
         return new UsernamePasswordAuthenticationToken(
                 userDetails,
