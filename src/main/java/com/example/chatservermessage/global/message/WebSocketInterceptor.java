@@ -4,6 +4,7 @@ import com.example.chatservermessage.domain.dto.UserInfoDTO;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +22,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import static com.example.chatservermessage.global.constant.Constants.COOKIE_AUTH_HEADER;
 import static com.example.chatservermessage.global.constant.Constants.REDIS_ACCESS_KEY;
 
@@ -29,6 +34,9 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_ACCE
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketInterceptor implements ChannelInterceptor {
+
+    @Value("${cache.key}")
+    private String key;
 
     private final RedisTemplate<String, UserInfoDTO> userInfoTemplate;
 
@@ -58,9 +66,11 @@ public class WebSocketInterceptor implements ChannelInterceptor {
         String prefixKey = "Bearer%20";
         String accessToken = prefixKey + accessTokenValue.substring(prefix.length());
 
-        log.info("레디스 엑세스 토큰 캐시 키 확인: {}", accessToken);
+        log.info("레디스 엑세스 토큰 확인: {}", accessToken);
 
-        UserInfoDTO dto = userInfoTemplate.opsForValue().get(REDIS_ACCESS_KEY + accessToken);
+        String accessTokenKey = createFingerPrint(accessToken);
+        log.info("레디스 엑세스 토큰 캐시 키 확인: {}", accessTokenKey);
+        UserInfoDTO dto = userInfoTemplate.opsForValue().get(REDIS_ACCESS_KEY + accessTokenKey);
 
         if (dto == null) {
             log.info("DTO 없음...?");
@@ -86,5 +96,27 @@ public class WebSocketInterceptor implements ChannelInterceptor {
                 null,
                 userDetails.getAuthorities()
         );
+    }
+
+    // 디바이스 핑거프린트 생성 메소드
+    private String createFingerPrint(String token) {
+        String data = key + token;
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+
+            // 바이트 배열 16진수 문자열로 변환
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("해시 알고리즘 탐색 불가", e);
+        }
     }
 }
