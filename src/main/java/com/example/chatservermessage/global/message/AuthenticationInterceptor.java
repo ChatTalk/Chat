@@ -33,7 +33,7 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_ACCE
 @Component
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
-public class WebSocketInterceptor implements ChannelInterceptor {
+public class AuthenticationInterceptor implements ChannelInterceptor {
 
     @Value("${cache.key}")
     private String key;

@@ -1,7 +1,7 @@
 package com.example.chatservermessage.global.config;
 
 import com.example.chatservermessage.global.message.SubscribeInterceptor;
-import com.example.chatservermessage.global.message.WebSocketInterceptor;
+import com.example.chatservermessage.global.message.AuthenticationInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -15,7 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketInterceptor webSocketInterceptor;
+    private final AuthenticationInterceptor authenticationInterceptor;
     private final SubscribeInterceptor subscribeInterceptor;
 
     @Override
@@ -35,7 +35,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration
-                .interceptors(webSocketInterceptor)
+                .interceptors(authenticationInterceptor)
                 .interceptors(subscribeInterceptor);
     }
 }
