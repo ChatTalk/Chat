@@ -62,8 +62,19 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    // 회원이 지금 구독하고 있는 채팅방 확인용(set 구조화)
     @Bean(name = "subscribeTemplate")
     public RedisTemplate<String, String> subscribeTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringStringRedisTemplate(redisConnectionFactory);
+    }
+
+    // 채팅방의 maximum 인원
+    @Bean(name = "maxPersonnelTemplate")
+    public RedisTemplate<String, String> maxPersonnelTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringStringRedisTemplate(redisConnectionFactory);
+    }
+
+    private RedisTemplate<String, String> getStringStringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
