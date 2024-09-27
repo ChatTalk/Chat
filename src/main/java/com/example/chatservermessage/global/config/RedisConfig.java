@@ -70,7 +70,13 @@ public class RedisConfig {
 
     // 채팅방의 maximum 인원
     @Bean(name = "maxPersonnelTemplate")
-    public RedisTemplate<String, String> maxPersonnelTemplate(RedisConnectionFactory redisConnectionFactory) {
+    public RedisTemplate<String, Integer> maxPersonnelTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringIntegerRedisTemplate(redisConnectionFactory);
+    }
+
+    // 채팅창의 접속자 인원 관리
+    @Bean(name = "participatedTemplate")
+    public RedisTemplate<String, String> participatedTemplate(RedisConnectionFactory redisConnectionFactory) {
         return getStringStringRedisTemplate(redisConnectionFactory);
     }
 
@@ -83,6 +89,19 @@ public class RedisConfig {
 
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+
+        return redisTemplate;
+    }
+
+    private RedisTemplate<String, Integer> getStringIntegerRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Integer> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Integer.class));
+
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Integer.class));
 
         return redisTemplate;
     }

@@ -11,6 +11,7 @@ public final class Constants {
     public static final String REDIS_ACCESS_KEY = "ACCESS_TOKEN:";
     public static final String REDIS_SUBSCRIBE_KEY = "SUBSCRIBE:";
     public static final String REDIS_MAX_PERSONNEL_KEY = "MAX_PERSONNEL:";
+    public static final String REDIS_PARTICIPATED_KEY = "PARTICIPATED:";
     public static final String BEARER_PREFIX = "Bearer ";
 
     // kafka 상수
