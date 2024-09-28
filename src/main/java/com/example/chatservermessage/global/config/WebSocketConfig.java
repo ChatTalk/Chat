@@ -17,7 +17,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final AuthenticationInterceptor authenticationInterceptor;
-    private final SubscribeInterceptor subscribeInterceptor;
+//    private final SubscribeInterceptor subscribeInterceptor;
 
     /**
      * disconnect 에 직접적으로 파라미터를 담아 보내 낚아챌 수 없기 때문에...
@@ -41,8 +41,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration
-                .interceptors(authenticationInterceptor)
-                .interceptors(subscribeInterceptor);
+                .interceptors(authenticationInterceptor);
+//                .interceptors(subscribeInterceptor);
 //                .interceptors(disconnectInterceptor);
     }
 }

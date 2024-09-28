@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.Objects;
 
 import static com.example.chatservermessage.global.constant.Constants.*;
 
@@ -19,6 +20,7 @@ import static com.example.chatservermessage.global.constant.Constants.*;
 public class ChatMessageController {
 
     private final SimpMessageSendingOperations messagingTemplate;
+    private final RedisTemplate<String, Integer> maxPersonnelTemplate;
     private final RedisTemplate<String, String> subscribeTemplate;
     private final RedisTemplate<String, String> participatedTemplate;
 
@@ -28,9 +30,22 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 입장 요청",
                 enter.getChatId(), principal.getName());
 
+        // 이미 구독 중인 유저의 재접속
         if (Boolean.TRUE.equals(subscribeTemplate.opsForSet().isMember(REDIS_SUBSCRIBE_KEY + principal.getName(), enter.getChatId()))) {
             log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), principal.getName());
             return;
+        }
+
+        Integer maxPersonnel = maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + enter.getChatId());
+        Long participatedPersonnel = participatedTemplate.opsForList().size(REDIS_PARTICIPATED_KEY + enter.getChatId());
+
+        // 인원이 초과된 채팅창 접속(예외 처리)
+        if (Objects.isNull(participatedPersonnel) || Objects.isNull(maxPersonnel)) {
+            throw new IllegalArgumentException("participatedPersonnel 혹은 maxPersonnel 에 이상 있다!");
+        }
+
+        if (maxPersonnel.longValue() == participatedPersonnel) {
+            throw new IllegalArgumentException("이미 최대인원 가득참");
         }
 
         subscribeTemplate.opsForSet()

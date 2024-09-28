@@ -59,7 +59,7 @@ public class SubscribeInterceptor implements ChannelInterceptor {
             <= participatedTemplate.opsForList().size(REDIS_PARTICIPATED_KEY + chatRoom)
             ) {
                 log.info("이미 가득찬 채팅방");
-                return createErrorMessage("이미 채팅방이 가득 찼음", accessor);
+                throw new IllegalArgumentException("이미 채팅방이 가득 찼음");
             }
 
             return message;
