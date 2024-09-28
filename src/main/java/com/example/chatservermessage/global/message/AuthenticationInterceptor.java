@@ -29,7 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import static com.example.chatservermessage.global.constant.Constants.COOKIE_AUTH_HEADER;
 import static com.example.chatservermessage.global.constant.Constants.REDIS_ACCESS_KEY;
 
-@Slf4j(topic = "WebSocketInterceptor")
+@Slf4j(topic = "AuthenticationInterceptor")
 @Component
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
@@ -44,7 +44,7 @@ public class AuthenticationInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         log.info("엑세스 명령: {}", accessor.getCommand());
-        log.info("메세지 헤더 확인 ㅠㅠ: {}", String.valueOf(accessor.getMessageHeaders()));
+//        log.info("메세지 헤더 확인 ㅠㅠ: {}", String.valueOf(accessor.getMessageHeaders()));
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             log.info("인증 시작");

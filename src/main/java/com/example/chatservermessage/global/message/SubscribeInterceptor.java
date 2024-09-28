@@ -11,6 +11,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,26 +45,24 @@ public class SubscribeInterceptor implements ChannelInterceptor {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
-                throw new IllegalArgumentException("웹소켓 단계 인증 객체 비어있음");
+                return createErrorMessage("웹소켓 인증 실패", accessor);
             }
 
             String email = ((UserDetailsImpl) authentication.getPrincipal()).getUsername();
             log.info("사용자 정보: {}", email);
 
-            if (Boolean.TRUE.equals(subscribeTemplate.opsForSet().isMember(REDIS_SUBSCRIBE_KEY + email, chatRoom))) {
-                log.info("이미 해당 방 구독 중인 유저 {}:", email);
-                return message;
-            }
+            /**
+             * redis template 관련 예외 설정(NPE 방지) 더 빡세게 할 필요 이씀
+             */
 
             if (maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + chatRoom)
             <= participatedTemplate.opsForList().size(REDIS_PARTICIPATED_KEY + chatRoom)
             ) {
                 log.info("이미 가득찬 채팅방");
-                throw new IllegalArgumentException("이미 채팅방이 가득찼습니다.");
+                return createErrorMessage("이미 채팅방이 가득 찼음", accessor);
             }
 
-            subscribeTemplate.opsForSet().add(REDIS_SUBSCRIBE_KEY + email, chatRoom);
-            participatedTemplate.opsForList().rightPush(REDIS_PARTICIPATED_KEY + chatRoom, email);
+            return message;
         }
 
         return message;
@@ -78,5 +77,14 @@ public class SubscribeInterceptor implements ChannelInterceptor {
         }
 
         throw new IllegalArgumentException("채팅방 구독 경로 설정 확인 필요");
+    }
+
+    // ERROR 메시지를 생성하는 헬퍼 메서드
+    private Message<?> createErrorMessage(String errorMessage, StompHeaderAccessor accessor) {
+        StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+        errorAccessor.setMessage(errorMessage);
+        errorAccessor.setSessionId(accessor.getSessionId());
+
+        return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
     }
 }

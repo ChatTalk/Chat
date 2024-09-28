@@ -1,5 +1,6 @@
 package com.example.chatservermessage.global.config;
 
+import com.example.chatservermessage.global.message.DisconnectInterceptor;
 import com.example.chatservermessage.global.message.SubscribeInterceptor;
 import com.example.chatservermessage.global.message.AuthenticationInterceptor;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final AuthenticationInterceptor authenticationInterceptor;
     private final SubscribeInterceptor subscribeInterceptor;
+
+    /**
+     * disconnect 에 직접적으로 파라미터를 담아 보내 낚아챌 수 없기 때문에...
+     */
+//    private final DisconnectInterceptor disconnectInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -37,5 +43,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration
                 .interceptors(authenticationInterceptor)
                 .interceptors(subscribeInterceptor);
+//                .interceptors(disconnectInterceptor);
     }
 }

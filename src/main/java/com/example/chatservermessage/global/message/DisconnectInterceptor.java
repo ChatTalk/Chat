@@ -60,6 +60,7 @@ public class DisconnectInterceptor implements ChannelInterceptor {
     // 구독 채널 접두어 제거 메소드
     private String removePrefix(String destination) {
         String prefix = "/sub/chat/";
+        log.info("디스커넥트 시점의 목적지 확인: {}", destination);
 
         if (destination != null && destination.startsWith(prefix)) {
             return destination.substring(prefix.length());
