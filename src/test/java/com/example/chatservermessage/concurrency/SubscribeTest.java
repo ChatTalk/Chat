@@ -1,16 +1,18 @@
 package com.example.chatservermessage.concurrency;
 
+import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.dto.UserInfoDTO;
-import com.example.chatservermessage.global.message.AuthenticationInterceptor;
-import com.example.chatservermessage.global.security.AuthenticationFilter;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -25,14 +27,14 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
+import static com.example.chatservermessage.global.constant.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+@Slf4j(topic = "Concurrency_Subscribe")
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SubscribeTest {
@@ -40,23 +42,22 @@ public class SubscribeTest {
     @LocalServerPort
     private int port;
 
-    private StompSession stompSession;
-
-    /**
-     * Spring 의 ApplicationContext 에 모킹된 빈을 추가하여, 해당 빈을 주입받는 모든 컴포넌트에서 이 모킹된 객체를 사용
-     * 즉, AuthenticationInterceptor 가 이 모킹된 userInfoTemplate 을 주입받은 거임
-     */
     @MockBean
     private RedisTemplate<String, UserInfoDTO> userInfoTemplate;
-
-    /**
-     * Mockito 를 통해 직접 생성되어 메모리에 존재, ApplicationContext 와는 독립적
-     * 특정 메서드의 동작 제어
-     */
     @Mock
     private ValueOperations<String, UserInfoDTO> valueOperations;
 
+    @Autowired
+    private RedisTemplate<String, Integer> maxPersonnelTemplate;
+    @Autowired
+    private RedisTemplate<String, String> participatedTemplate;
+    @Autowired
+    private RedisTemplate<String, String> subscribeTemplate;
+
     private String WS_URL;
+    private static final int CLIENT = 1_000;
+    private static final String CHAT_ID = "TEST";
+    private static final int LIMIT = 5;
 
     // StompClient 인스턴스 생성
     private WebSocketStompClient getStompClient() {
@@ -73,31 +74,78 @@ public class SubscribeTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
         this.WS_URL = "ws://localhost:" + port + "/stomp/chat";
+
+        maxPersonnelTemplate.opsForValue().set(REDIS_MAX_PERSONNEL_KEY + CHAT_ID, LIMIT);
+        participatedTemplate.opsForList().rightPush(REDIS_PARTICIPATED_KEY + CHAT_ID, "Host");
+
         // RedisTemplate Mock 생성
         when(userInfoTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
+    @DisplayName("구독 및 관련 송신 메세지 시점에서의 동시성 테스트")
     void test() throws ExecutionException, InterruptedException, TimeoutException {
-        // Mock UserInfoDTO
-        UserInfoDTO mockUserInfo = new UserInfoDTO(null, "test@example.com", "ROLE_USER", null);
+        ExecutorService executorService = Executors.newFixedThreadPool(CLIENT);
+        CountDownLatch latch = new CountDownLatch(CLIENT);
 
-        WebSocketStompClient stompClient = getStompClient();
+        for (int i = 1; i <= CLIENT; i++) {
+            // Mock UserInfoDTO
+            String username = "test" + i;
+            UserInfoDTO mockUserInfo = new UserInfoDTO(null, username, "ROLE_USER", null);
 
-        // 헤더 세팅
-        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
-        webSocketHttpHeaders.add("email", "user@example.com");
-        webSocketHttpHeaders.add("role", "ROLE_USER");
-        StompHeaders stompHeaders = new StompHeaders();
-        stompHeaders.add("Authorization", "Bearer testAccessToken");
+            WebSocketStompClient stompClient = getStompClient();
 
-        when(valueOperations.get(anyString())).thenReturn(mockUserInfo);
+            // 헤더 세팅
+            WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+            webSocketHttpHeaders.add("email", username);
+            webSocketHttpHeaders.add("role", "ROLE_USER");
+            StompHeaders stompHeaders = new StompHeaders();
+            stompHeaders.add("Authorization", "Bearer testAccessToken");
 
-        // WebSocket 세션 연결
-        this.stompSession = stompClient
-                .connectAsync(WS_URL, webSocketHttpHeaders, stompHeaders, new StompSessionHandlerAdapter() {})
-                .get(15, TimeUnit.SECONDS);
+            when(valueOperations.get(anyString())).thenReturn(mockUserInfo);
 
-        assertTrue(stompSession.isConnected(), "WebSocket 연결 성공");
+            // WebSocket 세션 연결
+            StompSession stompSession = stompClient
+                    .connectAsync(WS_URL, webSocketHttpHeaders, stompHeaders, new StompSessionHandlerAdapter() {
+                    })
+                    .get(15, TimeUnit.SECONDS);
+
+            log.info("가상 사용자 {} 웹소켓 연결 여부: {}", username, stompSession.isConnected());
+
+            ChatMessageDTO.Enter enter = new ChatMessageDTO.Enter(CHAT_ID);
+
+            executorService.submit(() -> {
+                        try {
+                            stompSession.send("/send/chat/enter", enter);
+                        } catch (Exception e) {
+                            log.info("구독 완료 실패: test_{}", username);
+                            log.error(e.getMessage());
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+            );
+        }
+
+        latch.await();
+
+        Integer maxPersonnel = maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + CHAT_ID);
+        Long participatedPersonnel = participatedTemplate.opsForList().size(REDIS_PARTICIPATED_KEY + CHAT_ID);
+
+        log.info("최대 인원: {}", maxPersonnel);
+        log.info("참여 인원: {}", participatedPersonnel);
+
+        assertEquals(maxPersonnel.longValue(), participatedPersonnel);
+    }
+
+    @AfterEach
+    void testDown() {
+        maxPersonnelTemplate.delete(REDIS_MAX_PERSONNEL_KEY + CHAT_ID);
+        participatedTemplate.delete(REDIS_PARTICIPATED_KEY + CHAT_ID);
+
+        for (int i = 1; i <= LIMIT; i++) {
+            String username = "test" + i;
+            subscribeTemplate.delete(REDIS_SUBSCRIBE_KEY + username);
+        }
     }
 }
