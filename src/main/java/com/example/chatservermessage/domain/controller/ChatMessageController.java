@@ -28,11 +28,6 @@ public class ChatMessageController {
                 enter.getChatId(), principal.getName());
 
         chatMessageService.enter(enter, principal);
-
-        ChatMessage message = new ChatMessage(enter, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
-        messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }
 
     // 사용자의 메세지 입력 송수신
@@ -41,10 +36,7 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 메세지 전송 요청: {}",
                 send.getChatId(), principal.getName(), send.getMessage());
 
-        ChatMessage message = new ChatMessage(send, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
-        messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
+        chatMessageService.message(send, principal);
     }
 
     // 사용자의 채팅방 퇴장
@@ -54,10 +46,5 @@ public class ChatMessageController {
                 leave.getChatId(), principal.getName());
 
         chatMessageService.leave(leave, principal);
-
-        ChatMessage message = new ChatMessage(leave, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
-        messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }
 }

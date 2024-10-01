@@ -19,4 +19,5 @@ public final class Constants {
     public static final String KAFKA_USER_DATA_KEY = "username"; // 동시성 해시 맵의 key 값
     public static final String KAFKA_USER_TO_CHAT_GROUP_ID = "dev";
     public static final String KAFKA_OTHER_TO_USER_TOPIC = "authorization";
+    public static final String KAFKA_CHAT_TOPIC = "CHAT";
 }

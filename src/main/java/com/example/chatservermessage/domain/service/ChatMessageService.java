@@ -1,9 +1,12 @@
 package com.example.chatservermessage.domain.service;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
+import com.example.chatservermessage.domain.entity.ChatMessage;
+import com.example.chatservermessage.global.kafka.KafkaMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -19,6 +22,8 @@ public class ChatMessageService {
     private final RedisTemplate<String, Integer> maxPersonnelTemplate;
     private final RedisTemplate<String, String> subscribeTemplate;
     private final RedisTemplate<String, String> participatedTemplate;
+
+    private final KafkaMessageService kafkaMessageService;
 
     public void enter(ChatMessageDTO.Enter enter, Principal principal) {
         // 이미 구독 중인 유저의 재접속
@@ -43,10 +48,18 @@ public class ChatMessageService {
                 .add(REDIS_SUBSCRIBE_KEY + principal.getName(), enter.getChatId());
         participatedTemplate.opsForList()
                 .rightPush(REDIS_PARTICIPATED_KEY + enter.getChatId(), principal.getName());
+
+        ChatMessage message = new ChatMessage(enter, principal.getName());
+        ChatMessageDTO dto = new ChatMessageDTO(message);
+
+        kafkaMessageService.send(dto);
     }
 
     public void message(ChatMessageDTO.Send send, Principal principal) {
+        ChatMessage message = new ChatMessage(send, principal.getName());
+        ChatMessageDTO dto = new ChatMessageDTO(message);
 
+        kafkaMessageService.send(dto);
     }
 
     public void leave(ChatMessageDTO.Leave leave, Principal principal) {
@@ -54,5 +67,10 @@ public class ChatMessageService {
                 .remove(REDIS_SUBSCRIBE_KEY + principal.getName(), leave.getChatId());
         participatedTemplate.opsForList()
                 .remove(REDIS_PARTICIPATED_KEY + leave.getChatId(), 0, principal.getName());
+
+        ChatMessage message = new ChatMessage(leave, principal.getName());
+        ChatMessageDTO dto = new ChatMessageDTO(message);
+
+        kafkaMessageService.send(dto);
     }
 }
