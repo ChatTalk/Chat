@@ -43,7 +43,7 @@ public class KafkaMessageService {
      */
     // consumer
     @KafkaListener(topics = KAFKA_CHAT_TOPIC)
-    public void listen(ChatMessageDTO dto, Acknowledgment acknowledgment) {
+    public void listen(ChatMessageDTO dto) {
         log.info("채팅 메세지 수신: {}번 // {}", dto.getChatId(), dto.getMessage());
         messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }

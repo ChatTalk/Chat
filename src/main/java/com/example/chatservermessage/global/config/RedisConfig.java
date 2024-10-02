@@ -68,6 +68,12 @@ public class RedisConfig {
         return getStringStringRedisTemplate(redisConnectionFactory);
     }
 
+    // 회원이 지급 '읽고'있는 채팅방 확인용
+    @Bean(name = "readTemplate")
+    public RedisTemplate<String, String> readTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringStringRedisTemplate(redisConnectionFactory);
+    }
+
     // 채팅방의 maximum 인원
     @Bean(name = "maxPersonnelTemplate")
     public RedisTemplate<String, Integer> maxPersonnelTemplate(RedisConnectionFactory redisConnectionFactory) {

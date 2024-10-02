@@ -1,5 +1,6 @@
 package com.example.chatservermessage.global.message;
 
+import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,21 +22,20 @@ import java.util.Objects;
 
 import static com.example.chatservermessage.global.constant.Constants.*;
 
-@Slf4j(topic = "SubscribeInterceptor")
+@Slf4j(topic = "ReadInterceptor")
 @Component
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE + 100)
-public class SubscribeInterceptor implements ChannelInterceptor {
+public class ReadInterceptor implements ChannelInterceptor {
 
-    private final RedisTemplate<String, String> subscribeTemplate;
-    private final RedisTemplate<String, Integer> maxPersonnelTemplate;
-    private final RedisTemplate<String, String> participatedTemplate;
+    private final RedisTemplate<String, String> readTemplate;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         log.info("엑세스 명령: {}", accessor.getCommand());
 
+        // 접속할 때
         if (Objects.equals(accessor.getCommand(), StompCommand.SUBSCRIBE)) {
             String destination = accessor.getDestination(); // 구독할 채널
             log.info("구독 채널: {}", destination);
@@ -54,15 +54,31 @@ public class SubscribeInterceptor implements ChannelInterceptor {
             /**
              * redis template 관련 예외 설정(NPE 방지) 더 빡세게 할 필요 이씀
              */
-
-            if (maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + chatRoom)
-            <= participatedTemplate.opsForList().size(REDIS_PARTICIPATED_KEY + chatRoom)
-            ) {
-                log.info("이미 가득찬 채팅방");
-                throw new IllegalArgumentException("이미 채팅방이 가득 찼음");
-            }
+            readTemplate.opsForValue().set(REDIS_CHAT_READ_KEY + email, chatRoom);
 
             return message;
+        }
+
+        // 접속 끊을 때
+        if (Objects.equals(accessor.getCommand(), StompCommand.SEND)) {
+            String destination = accessor.getDestination();
+            log.info("목적지: {}", destination);
+
+            if (destination != null && destination.startsWith("/send/chat/leave")) {
+                log.info("채팅 구독 종료");
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+                    return createErrorMessage("웹소켓 인증 실패", accessor);
+                }
+
+                String email = ((UserDetailsImpl) authentication.getPrincipal()).getUsername();
+                log.info("사용자 정보: {}", email);
+                readTemplate.delete(REDIS_CHAT_READ_KEY + email);
+
+                return message;
+            }
         }
 
         return message;
