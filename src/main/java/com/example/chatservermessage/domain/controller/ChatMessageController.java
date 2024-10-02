@@ -1,7 +1,6 @@
 package com.example.chatservermessage.domain.controller;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
-import com.example.chatservermessage.domain.entity.ChatMessage;
 import com.example.chatservermessage.domain.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,6 @@
 package com.example.chatservermessage.domain.service;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
-import com.example.chatservermessage.domain.entity.ChatMessage;
 import com.example.chatservermessage.global.kafka.KafkaMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,16 +48,12 @@ public class ChatMessageService {
         participatedTemplate.opsForList()
                 .rightPush(REDIS_PARTICIPATED_KEY + enter.getChatId(), principal.getName());
 
-        ChatMessage message = new ChatMessage(enter, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
+        ChatMessageDTO dto = new ChatMessageDTO(enter, principal.getName());
         kafkaMessageService.send(dto);
     }
 
     public void message(ChatMessageDTO.Send send, Principal principal) {
-        ChatMessage message = new ChatMessage(send, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
+        ChatMessageDTO dto = new ChatMessageDTO(send, principal.getName());
         kafkaMessageService.send(dto);
     }
 
@@ -68,9 +63,7 @@ public class ChatMessageService {
         participatedTemplate.opsForList()
                 .remove(REDIS_PARTICIPATED_KEY + leave.getChatId(), 0, principal.getName());
 
-        ChatMessage message = new ChatMessage(leave, principal.getName());
-        ChatMessageDTO dto = new ChatMessageDTO(message);
-
+        ChatMessageDTO dto = new ChatMessageDTO(leave, principal.getName());
         kafkaMessageService.send(dto);
     }
 }
