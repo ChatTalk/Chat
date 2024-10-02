@@ -20,8 +20,8 @@ public class ChatReadService {
     private final ChatReadRepository chatReadRepository;
 
     // 유저가 구독한 채팅방에 새 메시지를 추가
-    public void addUnreadMessage(String userId, String chatId, ChatMessageDTO unreadMessage) {
-        Optional<User> userOptional = chatReadRepository.findById(userId);
+    public void addUnreadMessage(String username, String chatId, ChatMessageDTO unreadMessage) {
+        Optional<User> userOptional = chatReadRepository.findByUsername(username);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -38,8 +38,8 @@ public class ChatReadService {
     }
 
     // 유저가 구독한 채팅방의 읽지 않은 메시지 가져오기
-    public List<ChatMessageDTO> getUnreadMessages(String userId, String chatId) {
-        Optional<User> userOptional =  chatReadRepository.findById(userId);
+    public List<ChatMessageDTO> getUnreadMessages(String username, String chatId) {
+        Optional<User> userOptional =  chatReadRepository.findByUsername(username);
 
         return userOptional.map(user -> user.getSubscribedChats().stream()
                 .filter(sub -> sub.getChatId().equals(chatId))
