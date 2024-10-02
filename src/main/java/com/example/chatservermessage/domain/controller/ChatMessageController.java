@@ -2,6 +2,7 @@ package com.example.chatservermessage.domain.controller;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.service.ChatMessageService;
+import com.example.chatservermessage.domain.service.ChatReadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -17,7 +18,7 @@ import static com.example.chatservermessage.global.constant.Constants.*;
 @RequiredArgsConstructor
 public class ChatMessageController {
 
-    private final SimpMessageSendingOperations messagingTemplate;
+    private final ChatReadService chatReadService;
     private final ChatMessageService chatMessageService;
 
     // 사용자의 채팅방 입장
@@ -26,6 +27,7 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 입장 요청",
                 enter.getChatId(), principal.getName());
 
+        chatReadService.createUserOrUpdate(principal.getName());
         chatMessageService.enter(enter, principal);
     }
 
@@ -44,6 +46,7 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 퇴장 요청",
                 leave.getChatId(), principal.getName());
 
+        chatReadService.deleteChatRoom(principal.getName(), leave.getChatId());
         chatMessageService.leave(leave, principal);
     }
 }

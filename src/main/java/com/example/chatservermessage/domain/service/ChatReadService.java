@@ -50,4 +50,14 @@ public class ChatReadService {
                 .map(ChatSubscriptionDTO::getUnreadMessages)
                 .orElse(Collections.emptyList())).orElse(Collections.emptyList());
     }
+
+    // 유저 퇴장 시, 해당 채팅 구독 삭제
+    public void deleteChatRoom(String username, String chatId) {
+        Optional<UserSubscription> userOptional = chatReadRepository.findByUsername(username);
+
+        if (userOptional.isPresent()) {
+            UserSubscription userSubscription = userOptional.get();
+            userSubscription.deleteChatRoom(chatId);
+        }
+    }
 }

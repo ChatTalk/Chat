@@ -40,4 +40,9 @@ public class UserSubscription {
 
         chatSubscriptionDTO.getUnreadMessages().add(chatMessageDTO);
     }
+
+    public void deleteChatRoom(String chatId) {
+        this.subscribedChats
+                .removeIf(chatSubscriptionDTO -> chatSubscriptionDTO.getChatId().equals(chatId));
+    }
 }
