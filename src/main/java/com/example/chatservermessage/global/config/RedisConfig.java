@@ -12,6 +12,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -82,8 +83,8 @@ public class RedisConfig {
 
     // 채팅창의 접속자 인원 관리
     @Bean(name = "participatedTemplate")
-    public RedisTemplate<String, String> participatedTemplate(RedisConnectionFactory redisConnectionFactory) {
-        return getStringStringRedisTemplate(redisConnectionFactory);
+    public RedisTemplate<String, Boolean> participatedTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringBooleanTemplate(redisConnectionFactory);
     }
 
     private RedisTemplate<String, String> getStringStringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -108,6 +109,23 @@ public class RedisConfig {
 
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Integer.class));
+
+        return redisTemplate;
+    }
+
+    private RedisTemplate<String, Boolean> getStringBooleanTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Boolean> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        // 키와 해시 키는 String으로 설정
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+
+        // 해시 값은 Boolean으로 설정
+        redisTemplate.setHashValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+
+        // 값을 Boolean으로 설정
+        redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Boolean.class));
 
         return redisTemplate;
     }

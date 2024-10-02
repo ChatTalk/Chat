@@ -20,7 +20,7 @@ public class ChatMessageService {
 
     private final RedisTemplate<String, Integer> maxPersonnelTemplate;
     private final RedisTemplate<String, String> subscribeTemplate;
-    private final RedisTemplate<String, String> participatedTemplate;
+    private final RedisTemplate<String, Boolean> participatedTemplate;
 
     private final KafkaMessageService kafkaMessageService;
 
@@ -45,8 +45,9 @@ public class ChatMessageService {
 
         subscribeTemplate.opsForSet()
                 .add(REDIS_SUBSCRIBE_KEY + principal.getName(), enter.getChatId());
-        participatedTemplate.opsForList()
-                .rightPush(REDIS_PARTICIPATED_KEY + enter.getChatId(), principal.getName());
+
+        participatedTemplate.opsForHash()
+                .put(REDIS_PARTICIPATED_KEY + enter.getChatId(), principal.getName(), true);
 
         ChatMessageDTO dto = new ChatMessageDTO(enter, principal.getName());
         kafkaMessageService.send(dto);
@@ -60,8 +61,8 @@ public class ChatMessageService {
     public void leave(ChatMessageDTO.Leave leave, Principal principal) {
         subscribeTemplate.opsForSet()
                 .remove(REDIS_SUBSCRIBE_KEY + principal.getName(), leave.getChatId());
-        participatedTemplate.opsForList()
-                .remove(REDIS_PARTICIPATED_KEY + leave.getChatId(), 0, principal.getName());
+        participatedTemplate.opsForHash()
+                .delete(REDIS_PARTICIPATED_KEY + leave.getChatId(), principal.getName());
 
         ChatMessageDTO dto = new ChatMessageDTO(leave, principal.getName());
         kafkaMessageService.send(dto);

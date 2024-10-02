@@ -22,6 +22,9 @@ import java.util.Objects;
 
 import static com.example.chatservermessage.global.constant.Constants.*;
 
+/**
+ * 회원의 관점(redis 의 키)에서 바라보기
+ */
 @Slf4j(topic = "ReadInterceptor")
 @Component
 @RequiredArgsConstructor
