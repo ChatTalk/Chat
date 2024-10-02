@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static com.example.chatservermessage.global.constant.Constants.REDIS_CHAT_READ_KEY;
+import static com.example.chatservermessage.global.constant.Constants.REDIS_PARTICIPATED_KEY;
 
 @Slf4j
 @RestController
@@ -22,6 +23,7 @@ public class ChatReadController {
 
     private final ChatReadService chatReadService;
     private final RedisTemplate<String, String> readTemplate;
+    private final RedisTemplate<String, Boolean> participatedTemplate;
 
     @GetMapping("/{chatId}")
     public ResponseEntity<List<ChatMessageDTO>> getChatMessages(
@@ -32,8 +34,12 @@ public class ChatReadController {
         return ResponseEntity.ok(unreadMessages);
     }
 
-    @PutMapping()
-    public void unread(@AuthenticationPrincipal UserDetails userDetails) {
+    // 메뉴 돌아가기 버트 눌렀을 때
+    @PutMapping("/{chatId}")
+    public void unread(
+            @PathVariable Long chatId, @AuthenticationPrincipal UserDetails userDetails) {
         readTemplate.delete(REDIS_CHAT_READ_KEY + userDetails.getUsername());
+        participatedTemplate.opsForHash()
+                .put(REDIS_PARTICIPATED_KEY + chatId, userDetails.getUsername(), false);
     }
 }
