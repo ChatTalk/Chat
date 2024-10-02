@@ -122,10 +122,9 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
 
         // 해시 값은 Boolean으로 설정
-        redisTemplate.setHashValueSerializer(new GenericToStringSerializer<>(Boolean.class));
-
+        redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Boolean.class));
         // 값을 Boolean으로 설정
-        redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Boolean.class));
 
         return redisTemplate;
     }
