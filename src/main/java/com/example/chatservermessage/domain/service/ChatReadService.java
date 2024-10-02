@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,11 +45,25 @@ public class ChatReadService {
     public List<ChatMessageDTO> getUnreadMessages(String username, String chatId) {
         Optional<UserSubscription> userOptional =  chatReadRepository.findByUsername(username);
 
-        return userOptional.map(userSubscription -> userSubscription.getSubscribedChats().stream()
+        return userOptional
+                .map(userSubscription -> userSubscription.getSubscribedChats().stream()
                 .filter(sub -> sub.getChatId().equals(chatId))
-                .findFirst()
-                .map(ChatSubscriptionDTO::getUnreadMessages)
-                .orElse(Collections.emptyList())).orElse(Collections.emptyList());
+                        .findFirst()
+                        .map(chatSubscription -> {
+                            // 읽지 않은 메시지 리스트를 반환
+                            List<ChatMessageDTO> messages
+                                    = new ArrayList<>(chatSubscription.getUnreadMessages());
+
+                            // 읽지 않은 메시지 리스트를 빈 배열로 초기화
+                            chatSubscription.setUnreadMessages(Collections.emptyList());
+
+                            // 변경사항을 저장소에 반영 (MongoDB에 반영)
+                            chatReadRepository.save(userSubscription);
+
+                            return messages;
+                        })
+                        .orElse(Collections.emptyList()))
+                .orElse(Collections.emptyList());
     }
 
     // 유저 퇴장 시, 해당 채팅 구독 삭제
