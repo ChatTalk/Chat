@@ -8,9 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j(topic = "ChatReadService")
@@ -19,14 +16,6 @@ import java.util.Optional;
 public class ChatReadService {
 
     private final ChatReadRepository chatReadRepository;
-
-    // 도큐먼트 생성
-    public void createUserOrUpdate(String username) {
-        if (chatReadRepository.findByUsername(username).isEmpty()) {
-            UserSubscription userSubscription = new UserSubscription(username);
-            chatReadRepository.save(userSubscription);
-        }
-    }
 
     // 유저가 구독한 채팅방에 새 메시지를 추가
     public void addUnreadMessage(String username, String chatId, ChatMessageDTO unreadMessage) {
@@ -41,29 +30,23 @@ public class ChatReadService {
         }
     }
 
-    // 유저가 구독한 채팅방의 읽지 않은 메시지 가져오기
-    public List<ChatMessageDTO> getUnreadMessages(String username, String chatId) {
-        Optional<UserSubscription> userOptional =  chatReadRepository.findByUsername(username);
+    public void addChatRoom(String username, String chatId) {
+        UserSubscription userSubscription;
 
-        return userOptional
-                .map(userSubscription -> userSubscription.getSubscribedChats().stream()
-                .filter(sub -> sub.getChatId().equals(chatId))
-                        .findFirst()
-                        .map(chatSubscription -> {
-                            // 읽지 않은 메시지 리스트를 반환
-                            List<ChatMessageDTO> messages
-                                    = new ArrayList<>(chatSubscription.getUnreadMessages());
+        if (chatReadRepository.findByUsername(username).isEmpty()) {
+            userSubscription = new UserSubscription(username);
+        } else {
+            userSubscription = chatReadRepository.findByUsername(username).get();
+        }
 
-                            // 읽지 않은 메시지 리스트를 빈 배열로 초기화
-                            chatSubscription.setUnreadMessages(Collections.emptyList());
+        if (userSubscription.getSubscribedChats()
+                .stream().map(ChatSubscriptionDTO::getChatId).toList().contains(chatId)) {
+            log.info("이미 구독하고 있는 채팅방");
+            return;
+        }
 
-                            // 변경사항을 저장소에 반영 (MongoDB에 반영)
-                            chatReadRepository.save(userSubscription);
-
-                            return messages;
-                        })
-                        .orElse(Collections.emptyList()))
-                .orElse(Collections.emptyList());
+        userSubscription.addChatRoom(chatId);
+        chatReadRepository.save(userSubscription);
     }
 
     // 유저 퇴장 시, 해당 채팅 구독 삭제
@@ -73,6 +56,7 @@ public class ChatReadService {
         if (userOptional.isPresent()) {
             UserSubscription userSubscription = userOptional.get();
             userSubscription.deleteChatRoom(chatId);
+            chatReadRepository.save(userSubscription);
         }
     }
 }

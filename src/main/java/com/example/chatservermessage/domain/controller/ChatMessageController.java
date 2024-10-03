@@ -6,12 +6,9 @@ import com.example.chatservermessage.domain.service.ChatReadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
-
-import static com.example.chatservermessage.global.constant.Constants.*;
 
 @Slf4j(topic = "ChatMessageController")
 @Controller
@@ -27,7 +24,7 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 입장 요청",
                 enter.getChatId(), principal.getName());
 
-        chatReadService.createUserOrUpdate(principal.getName());
+        chatReadService.addChatRoom(principal.getName(), enter.getChatId());
         chatMessageService.enter(enter, principal);
     }
 

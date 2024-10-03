@@ -51,27 +51,26 @@ public class KafkaMessageService {
      */
     // consumer
     @KafkaListener(topics = KAFKA_CHAT_TOPIC)
+    /**
+     * 카프카 리스너가 비동기적으로 동작해서 인증 객체가 생성된 시점의 스레드와 카프카 리스너의 스레드가 다름
+     * 그래서 인증 객체가 null...
+     * 다만 앱 레벨에서 카프카 리스너 메소드는 싱글 스레드로 동작한다. 카프카가 멀티 스레드로 동작
+     */
     public void listen(ChatMessageDTO dto) {
         log.info("채팅 메세지 수신: {}번 // {}", dto.getChatId(), dto.getMessage());
         Map<Object, Object> entries
                 = participatedTemplate.opsForHash()
                 .entries(REDIS_PARTICIPATED_KEY + dto.getChatId());
 
-        // 인증 객체 들고오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        entries.forEach((key, value) -> {
+            if (value == Boolean.FALSE) {
+                log.info("다른 채팅창에 있거나 접속하지 않은 유저: {}", key);
+                chatReadService.addUnreadMessage((String) key, dto.getChatId(), dto);
+            } else {
+                log.info("현재 접속 중인 유저: {}", key);
+            }
+        });
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized in listen from Kafka");
-        }
-
-        String email = ((UserDetailsImpl) authentication.getPrincipal()).getUsername();
-        log.info("사용자 정보: {}", email);
-
-        if (entries.get(email) != null && entries.get(email) == Boolean.TRUE) {
-            messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
-        } else {
-            // 안 읽고 있다는 뜻이므로 mongoDB 저장
-            chatReadService.addUnreadMessage(email, dto.getChatId(), dto);
-        }
+        messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }
 }
