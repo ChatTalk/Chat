@@ -11,6 +11,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
@@ -68,6 +69,11 @@ public class RedisConfig {
 //    public RedisTemplate<String, String> subscribeTemplate(RedisConnectionFactory redisConnectionFactory) {
 //        return getStringStringRedisTemplate(redisConnectionFactory);
 //    }
+
+    @Bean(name = "pubSubTemplate")
+    public RedisTemplate<String, String> chatUserRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringStringRedisTemplate(redisConnectionFactory);
+    }
 
     // 회원이 지급 '읽고'있는 채팅방 확인용
     @Bean(name = "readTemplate")
@@ -127,5 +133,12 @@ public class RedisConfig {
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Boolean.class));
 
         return redisTemplate;
+    }
+
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory redisConnectionFactory) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory);
+        return container;
     }
 }
