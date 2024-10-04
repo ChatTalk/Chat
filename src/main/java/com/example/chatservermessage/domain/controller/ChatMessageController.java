@@ -29,7 +29,7 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 입장 요청",
                 enter.getChatId(), principal.getName());
 
-        redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
+//        redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
         chatReadService.addChatRoom(principal.getName(), enter.getChatId());
         chatMessageService.enter(enter, principal);
     }
@@ -49,8 +49,11 @@ public class ChatMessageController {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 퇴장 요청",
                 leave.getChatId(), principal.getName());
 
-        redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
+//        redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
         chatReadService.deleteChatRoom(principal.getName(), leave.getChatId());
+
+//        log.info("111여기까지는 아이디가 살아있나?: {}", leave.getChatId());
+
         chatMessageService.leave(leave, principal);
     }
 }

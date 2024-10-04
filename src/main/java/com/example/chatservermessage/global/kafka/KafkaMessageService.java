@@ -33,6 +33,7 @@ public class KafkaMessageService {
     // producer
     public void send(ChatMessageDTO chatMessageDTO) {
         try {
+            log.info("채팅방 아이디: {}", chatMessageDTO.getChatId());
             log.info("채팅 메세지 송신: {}", chatMessageDTO.getMessage());
             kafkaTemplate.send(KAFKA_CHAT_TOPIC, chatMessageDTO.getChatId(), chatMessageDTO);
         } catch (Exception e) {

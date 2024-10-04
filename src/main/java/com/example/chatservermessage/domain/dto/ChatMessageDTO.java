@@ -40,7 +40,7 @@ public class ChatMessageDTO {
     }
 
     public ChatMessageDTO(ChatMessageDTO.Leave dto, String username) {
-        this.chatId = chatId;
+        this.chatId = dto.getChatId();
         this.type = ChatMessageType.LEAVE;
         this.username = username;
         this.message = username + " 님이 퇴장하셨습니다.";

@@ -25,12 +25,12 @@ public class ChatMessageService {
     private final KafkaMessageService kafkaMessageService;
 
     public void enter(ChatMessageDTO.Enter enter, Principal principal) throws JsonProcessingException {
-        redisParticipantsService.updateParticipants("PUT", enter.getChatId(), principal.getName());
-
         if (redisParticipantsService.checkParticipants(enter.getChatId(), principal.getName())) {
             log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), principal.getName());
             return;
         }
+
+        redisParticipantsService.updateParticipants("PUT", enter.getChatId(), principal.getName());
 
         Integer maxPersonnel = maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + enter.getChatId());
         Long participatedPersonnel = redisParticipantsService.getSize(enter.getChatId());
@@ -55,6 +55,8 @@ public class ChatMessageService {
 
     public void leave(ChatMessageDTO.Leave leave, Principal principal) throws JsonProcessingException {
         redisParticipantsService.updateParticipants("DELETE", leave.getChatId(), principal.getName());
+
+//        log.info("222여기까지는 아이디가 살아있나?: {}", leave.getChatId());
 
         ChatMessageDTO dto = new ChatMessageDTO(leave, principal.getName());
         kafkaMessageService.send(dto);
