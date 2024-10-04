@@ -18,8 +18,6 @@ import java.util.List;
 @Service
 public class RedisMessageListenerService implements MessageListener {
 
-    private final SimpMessageSendingOperations messagingTemplate;
-
     @Override
     public void onMessage(Message message, byte[] pattern) {
         String channel = new String(message.getChannel());
@@ -33,6 +31,7 @@ public class RedisMessageListenerService implements MessageListener {
             log.info("날 것 그대로의 메세지: " + body);
 
             List<UserReadDTO> dto = new ObjectMapper().readValue(body, new TypeReference<List<UserReadDTO>>() {});
+            log.info("파싱: {}", dto.toString());
 //            log.info("값 확인: " + dto.toString());
 
             // 메시지를 모든 WebSocket 클라이언트에게 브로드캐스트

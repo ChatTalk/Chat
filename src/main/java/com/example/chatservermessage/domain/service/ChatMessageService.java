@@ -27,6 +27,7 @@ public class ChatMessageService {
     public void enter(ChatMessageDTO.Enter enter, Principal principal) throws JsonProcessingException {
         if (redisParticipantsService.checkParticipants(enter.getChatId(), principal.getName())) {
             log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), principal.getName());
+            redisParticipantsService.updateParticipants("PUT", enter.getChatId(), principal.getName());
             return;
         }
 
