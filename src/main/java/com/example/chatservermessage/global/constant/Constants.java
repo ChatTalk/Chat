@@ -15,6 +15,9 @@ public final class Constants {
     public static final String REDIS_CHAT_READ_KEY = "CHAT_READ:";
     public static final String BEARER_PREFIX = "Bearer ";
 
+    public static final String REDIS_SUB_DELETE = "SUB_DELETE:";
+    public static final String REDIS_SUB_UPDATE = "SUB_UPDATE:";
+
     // kafka 상수
     public static final String KAFKA_USER_TO_CHAT_TOPIC = "email";  // chat 인스턴스에 전파하기 위한 토픽
     public static final String KAFKA_USER_DATA_KEY = "username"; // 동시성 해시 맵의 key 값
