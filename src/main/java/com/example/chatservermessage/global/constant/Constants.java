@@ -10,11 +10,18 @@ public final class Constants {
     public static final String REDIS_REFRESH_KEY = "REFRESH_TOKEN:";
     public static final String REDIS_ACCESS_KEY = "ACCESS_TOKEN:";
     public static final String REDIS_SUBSCRIBE_KEY = "SUBSCRIBE:";
+    public static final String REDIS_MAX_PERSONNEL_KEY = "MAX_PERSONNEL:";
+    public static final String REDIS_PARTICIPATED_KEY = "PARTICIPATED:";
+    public static final String REDIS_CHAT_READ_KEY = "CHAT_READ:";
     public static final String BEARER_PREFIX = "Bearer ";
+
+    public static final String REDIS_SUB_DELETE = "SUB_DELETE:";
+    public static final String REDIS_SUB_UPDATE = "SUB_UPDATE:";
 
     // kafka 상수
     public static final String KAFKA_USER_TO_CHAT_TOPIC = "email";  // chat 인스턴스에 전파하기 위한 토픽
     public static final String KAFKA_USER_DATA_KEY = "username"; // 동시성 해시 맵의 key 값
     public static final String KAFKA_USER_TO_CHAT_GROUP_ID = "dev";
     public static final String KAFKA_OTHER_TO_USER_TOPIC = "authorization";
+    public static final String KAFKA_CHAT_TOPIC = "CHAT";
 }

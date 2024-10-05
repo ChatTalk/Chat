@@ -1,6 +1,7 @@
 package com.example.chatservermessage.global.config;
 
-import com.example.chatservermessage.global.message.WebSocketInterceptor;
+import com.example.chatservermessage.global.message.AuthenticationInterceptor;
+import com.example.chatservermessage.global.message.ReadInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -14,7 +15,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketInterceptor webSocketInterceptor;
+    private final AuthenticationInterceptor authenticationInterceptor;
+    private final ReadInterceptor readInterceptor;
+
+    /**
+     * disconnect 에 직접적으로 파라미터를 담아 보내 낚아챌 수 없기 때문에...
+     */
+//    private final DisconnectInterceptor disconnectInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -32,6 +39,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(webSocketInterceptor);
+        registration
+                .interceptors(authenticationInterceptor)
+                .interceptors(readInterceptor);
+//                .interceptors(disconnectInterceptor);
     }
 }
