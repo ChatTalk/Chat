@@ -31,7 +31,7 @@ public class RedisParticipantsService {
         }
 
         if (event.equals("DELETE")) {
-            participatedTemplate.delete(REDIS_PARTICIPATED_KEY + chatId);
+            participatedTemplate.opsForHash().delete(REDIS_PARTICIPATED_KEY + chatId, email);
         }
 
         Map<Object, Object> entries =
@@ -44,6 +44,7 @@ public class RedisParticipantsService {
 
         // redis 송신
         String userReadListString = objectMapper.writeValueAsString(userReadList);
+        log.info("업데이트 된 데이터: {}", userReadListString);
         pubSubTemplate.convertAndSend(REDIS_CHAT_PREFIX + chatId, userReadListString);
     }
 
