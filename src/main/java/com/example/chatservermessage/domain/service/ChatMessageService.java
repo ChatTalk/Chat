@@ -1,6 +1,7 @@
 package com.example.chatservermessage.domain.service;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
+import com.example.chatservermessage.domain.dto.ChatRoomDTO;
 import com.example.chatservermessage.global.kafka.KafkaMessageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,14 @@ public class ChatMessageService {
     private final GraphqlService graphqlService;
 
     public void enter(ChatMessageDTO.Enter enter, Principal principal) throws JsonProcessingException {
+        ChatRoomDTO chatRoomDTO = graphqlService.getChatRoomById(enter.getChatId());
+
+        log.info(
+                "{}번, 제목: {}, 개설자: {}, 제한인원: {}, 개설일자: {}",
+                chatRoomDTO.id(), chatRoomDTO.title(), chatRoomDTO.openUsername(),
+                chatRoomDTO.maxPersonnel(), chatRoomDTO.createdAt()
+        );
+
         if (redisParticipantsService.checkParticipants(enter.getChatId(), principal.getName())) {
             log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), principal.getName());
             redisParticipantsService.updateParticipants("PUT", enter.getChatId(), principal.getName());
