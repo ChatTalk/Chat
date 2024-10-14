@@ -4,10 +4,13 @@ import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.service.ChatMessageService;
 import com.example.chatservermessage.domain.service.ChatReadService;
 import com.example.chatservermessage.global.redis.RedisSubscribeService;
+import com.example.chatservermessage.global.user.UserDetailsImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -25,13 +28,13 @@ public class ChatMessageController {
 
     // 사용자의 채팅방 입장
     @MessageMapping(value = "/chat/enter")
-    public void enter(ChatMessageDTO.Enter enter, Principal principal) throws JsonProcessingException {
+    public void enter(ChatMessageDTO.Enter enter, @AuthenticationPrincipal UserDetailsImpl userDetails) throws JsonProcessingException {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 입장 요청",
-                enter.getChatId(), principal.getName());
+                enter.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
-        chatReadService.addChatRoom(principal.getName(), enter.getChatId());
-        chatMessageService.enter(enter, principal);
+        chatReadService.addChatRoom(userDetails.getUsername(), enter.getChatId());
+        chatMessageService.enter(enter, userDetails);
     }
 
     // 사용자의 메세지 입력 송수신
