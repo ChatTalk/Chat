@@ -7,14 +7,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import static com.example.chatservermessage.global.constant.Constants.REDIS_CHAT_PREFIX;
-import static com.example.chatservermessage.global.constant.Constants.REDIS_PARTICIPATED_KEY;
 
 @Slf4j(topic = "ChatParticipantsService")
 @Service
 @RequiredArgsConstructor
 public class RedisParticipantsService {
 
-    private final RedisTemplate<String, Boolean> participatedTemplate;
     private final RedisTemplate<String, ChatUserReadDTO> pubSubTemplate;
 
     public void participate(String chatId, String email) {
@@ -25,9 +23,5 @@ public class RedisParticipantsService {
     public void leave(String chatId, String email) {
         ChatUserReadDTO chatUserReadDTO = new ChatUserReadDTO(chatId, email, false, true);
         pubSubTemplate.convertAndSend(REDIS_CHAT_PREFIX + chatId, chatUserReadDTO);
-    }
-
-    public Long getSize(String chatId) {
-        return participatedTemplate.opsForHash().size(REDIS_PARTICIPATED_KEY + chatId);
     }
 }

@@ -10,4 +10,11 @@ public interface ChatUserSubscriptionRepository extends JpaRepository<ChatUserSu
     void deleteByChatIdAndEmail(String chatId, String email); // 해당 채팅방 구독 종료에서 써먹기
 
     boolean existsByChatIdAndEmail(String chatId, String email);
+
+    /**
+     * 임시 로직임, 대기열 구현 후에 없어질 예정
+     * @param chatId
+     * @return
+     */
+    long countByChatId(String chatId);
 }
