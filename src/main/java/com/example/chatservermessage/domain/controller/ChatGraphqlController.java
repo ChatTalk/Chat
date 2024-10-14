@@ -20,7 +20,7 @@ public class ChatGraphqlController {
     private final ChatUserSubscriptionService chatUserSubscriptionService;
 
     @QueryMapping
-    public List<GraphqlDTO> getSubscriptions(@Argument String email) {
+    public List<GraphqlDTO> subscriptionsByEmail(@Argument String email) {
         return chatUserSubscriptionService.getSubscriptions(email);
     }
 }
