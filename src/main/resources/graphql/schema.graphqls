@@ -1,0 +1,9 @@
+type ChatUserSubscription {
+    id: ID!
+    chatId: String!
+    email: String!
+}
+
+type Query {
+    subscriptionsByEmail(email: String!): [ChatUserSubscription!]!
+}

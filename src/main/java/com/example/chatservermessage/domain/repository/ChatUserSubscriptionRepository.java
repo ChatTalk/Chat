@@ -4,6 +4,8 @@ import com.example.chatservermessage.domain.entity.ChatUserSubscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 // 서비스 로직들만 포함시키기(조회 로직은 chat 인스턴스에서)
 @Repository
 public interface ChatUserSubscriptionRepository extends JpaRepository<ChatUserSubscription, Long> {
@@ -17,4 +19,6 @@ public interface ChatUserSubscriptionRepository extends JpaRepository<ChatUserSu
      * @return
      */
     long countByChatId(String chatId);
+
+    List<ChatUserSubscription> findByEmail(String email);
 }

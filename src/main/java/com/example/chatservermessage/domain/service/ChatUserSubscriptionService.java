@@ -1,10 +1,13 @@
 package com.example.chatservermessage.domain.service;
 
+import com.example.chatservermessage.domain.dto.GraphqlDTO;
 import com.example.chatservermessage.domain.entity.ChatUserSubscription;
 import com.example.chatservermessage.domain.repository.ChatUserSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -28,6 +31,14 @@ public class ChatUserSubscriptionService {
     // 구독 종료
     public void unsubscribe(String chatId, String email) {
         chatUserSubscriptionRepository.delete(new ChatUserSubscription(chatId, email));
+    }
+
+    // 개별 이메일 당 구독 리스트 들고 오기
+    public List<GraphqlDTO> getSubscriptions(String email) {
+        return chatUserSubscriptionRepository.findByEmail(email).
+                stream()
+                .map(e -> new GraphqlDTO(e.getId().toString(), e.getChatId(), e.getEmail()))
+                .toList();
     }
 
     // 구독 리스트 길이 갖고오기
