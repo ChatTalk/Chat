@@ -1,5 +1,6 @@
 package com.example.chatservermessage.global.config;
 
+import com.example.chatservermessage.domain.dto.ChatUserReadDTO;
 import com.example.chatservermessage.domain.dto.UserInfoDTO;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
@@ -71,8 +72,8 @@ public class RedisConfig {
 //    }
 
     @Bean(name = "pubSubTemplate")
-    public RedisTemplate<String, String> chatUserRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        return getStringStringRedisTemplate(redisConnectionFactory);
+    public RedisTemplate<String, ChatUserReadDTO> chatUserRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return getStringChatUserReadDTOTemplate(redisConnectionFactory);
     }
 
     // 회원이 지급 '읽고'있는 채팅방 확인용
@@ -131,6 +132,22 @@ public class RedisConfig {
         redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Boolean.class));
         // 값을 Boolean으로 설정
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Boolean.class));
+
+        return redisTemplate;
+    }
+
+    private RedisTemplate<String, ChatUserReadDTO> getStringChatUserReadDTOTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, ChatUserReadDTO> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        // 키와 해시 키는 String으로 설정
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+
+        // 해시 값은 Boolean으로 설정
+        redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(ChatUserReadDTO.class));
+        // 값을 Boolean으로 설정
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatUserReadDTO.class));
 
         return redisTemplate;
     }

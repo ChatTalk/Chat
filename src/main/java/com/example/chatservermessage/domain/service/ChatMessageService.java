@@ -4,20 +4,12 @@ import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.dto.ChatRoomDTO;
 import com.example.chatservermessage.global.kafka.KafkaMessageService;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.Objects;
-
-import static com.example.chatservermessage.global.constant.Constants.*;
 
 @Slf4j(topic = "ChatMessageService")
 @Service
@@ -31,7 +23,7 @@ public class ChatMessageService {
     private final GraphqlService graphqlService;
     private final ChatUserSubscriptionService chatUserSubscriptionService;
 
-    public void enter(ChatMessageDTO.Enter enter, @AuthenticationPrincipal UserDetailsImpl userDetails) throws JsonProcessingException {
+    public void enter(ChatMessageDTO.Enter enter, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         String username = userDetails.getUsername();
         String role = userDetails.getRole();
 
@@ -52,24 +44,18 @@ public class ChatMessageService {
          */
         if (chatUserSubscriptionService.isSubscribed(enter.getChatId(), username)) {
             log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), username);
-        }
-
-
-        if (redisParticipantsService.checkParticipants(enter.getChatId(), username)) {
-            log.info("이미 해당 {}번 채팅방 구독 중인 유저 {}:", enter.getChatId(), username);
-            redisParticipantsService.updateParticipants("PUT", enter.getChatId(), username);
+            redisParticipantsService.participate(enter.getChatId(), username);
             return;
         }
 
-        redisParticipantsService.updateParticipants("PUT", enter.getChatId(), username);
+        /**
+         * 채팅창 구독 접속에 대한 예외 로직을 Participant 인스턴스에서 처리해야 함
+         * 거기서 만약 인원 초과로 안됐다? 그럼 이쪽 로직들도 안 돌아가고 예외 던져야 하는데
+         * 그 에러를 전파받아서 여기서 분산 트랜잭션 처리를 하는 건가? 일단은 로직 구현 해보자
+         */
+        redisParticipantsService.participate(enter.getChatId(), username);
 
-//        Integer maxPersonnel = maxPersonnelTemplate.opsForValue().get(REDIS_MAX_PERSONNEL_KEY + enter.getChatId());
         Long participatedPersonnel = redisParticipantsService.getSize(enter.getChatId());
-
-        // 인원이 초과된 채팅창 접속(예외 처리)
-//        if (Objects.isNull(maxPersonnel)) {
-//            throw new IllegalArgumentException("maxPersonnel 에 이상 있다!");
-//        }
 
         if (chatRoomDTO.maxPersonnel().longValue() == participatedPersonnel) {
             throw new IllegalArgumentException("이미 최대인원 가득참");
@@ -84,9 +70,8 @@ public class ChatMessageService {
         kafkaMessageService.send(dto);
     }
 
-    public void leave(ChatMessageDTO.Leave leave, Principal principal) throws JsonProcessingException {
-        redisParticipantsService.updateParticipants("DELETE", leave.getChatId(), principal.getName());
-
+    public void leave(ChatMessageDTO.Leave leave, Principal principal) {
+        redisParticipantsService.leave(leave.getChatId(), principal.getName());
         chatUserSubscriptionService.unsubscribe(leave.getChatId(), principal.getName());
 
         ChatMessageDTO dto = new ChatMessageDTO(leave, principal.getName());
