@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ChatUserSubscriptionRepository extends JpaRepository<ChatUserSubscription, Long> {
     void deleteByChatIdAndEmail(String chatId, String email); // 해당 채팅방 구독 종료에서 써먹기
+
+    boolean existsByChatIdAndEmail(String chatId, String email);
 }
