@@ -25,7 +25,7 @@ public class ChatMessageService {
         String username = userDetails.getUsername();
         String role = userDetails.getRole();
 
-        log.info("사용자 이메일: {}", username);chatUserSubscriptionService.subscribe(enter.getChatId(), username);
+        log.info("사용자 이메일: {}", username);
         log.info("사용자 권한: {}", role);
 
         ChatRoomDTO chatRoomDTO = graphqlService.getChatRoomById(enter.getChatId(), username, role);

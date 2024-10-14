@@ -64,12 +64,6 @@ public class RedisConfig {
 
         return redisTemplate;
     }
-//
-//    // 회원이 지금 구독하고 있는 채팅방 확인용(set 구조화)
-//    @Bean(name = "subscribeTemplate")
-//    public RedisTemplate<String, String> subscribeTemplate(RedisConnectionFactory redisConnectionFactory) {
-//        return getStringStringRedisTemplate(redisConnectionFactory);
-//    }
 
     @Bean(name = "pubSubTemplate")
     public RedisTemplate<String, ChatUserReadDTO> chatUserRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -80,12 +74,6 @@ public class RedisConfig {
     @Bean(name = "readTemplate")
     public RedisTemplate<String, String> readTemplate(RedisConnectionFactory redisConnectionFactory) {
         return getStringStringRedisTemplate(redisConnectionFactory);
-    }
-
-    // 채팅방의 maximum 인원
-    @Bean(name = "maxPersonnelTemplate")
-    public RedisTemplate<String, Integer> maxPersonnelTemplate(RedisConnectionFactory redisConnectionFactory) {
-        return getStringIntegerRedisTemplate(redisConnectionFactory);
     }
 
     // 채팅창의 접속자 인원 관리
@@ -103,19 +91,6 @@ public class RedisConfig {
 
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
-
-        return redisTemplate;
-    }
-
-    private RedisTemplate<String, Integer> getStringIntegerRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Integer> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Integer.class));
-
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Integer.class));
 
         return redisTemplate;
     }
