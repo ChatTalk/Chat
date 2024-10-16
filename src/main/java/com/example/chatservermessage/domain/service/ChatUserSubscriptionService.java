@@ -48,15 +48,15 @@ public class ChatUserSubscriptionService {
                 .toList();
     }
 
-    // 구독 리스트 길이 갖고오기
-
-    /**
-     * 말했듯이 임시 로직
-     * 대기열 구현하고 나서 사라질 예정
-     * @param chatId
-     * @return
-     */
-    public long countByChatId(String chatId) {
-        return chatUserSubscriptionRepository.countByChatId(chatId);
-    }
+//    // 구독 리스트 길이 갖고오기
+//
+//    /**
+//     * 말했듯이 임시 로직
+//     * 대기열 구현하고 나서 사라질 예정
+//     * @param chatId
+//     * @return
+//     */
+//    public long countByChatId(String chatId) {
+//        return chatUserSubscriptionRepository.countByChatId(chatId);
+//    }
 }

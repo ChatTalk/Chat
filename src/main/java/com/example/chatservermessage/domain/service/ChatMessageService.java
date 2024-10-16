@@ -57,11 +57,11 @@ public class ChatMessageService {
          * 이 로직 내에서 대기열 예외 처리, 즉 아래의 로직은 없어질 예정
          * chatUserSubscriptionService 여기서 대기열 처리를 해야될 테므로
          */
-        long participatedPersonnel = chatUserSubscriptionService.countByChatId(enter.getChatId());
-
-        if (chatRoomDTO.maxPersonnel().longValue() == participatedPersonnel) {
-            throw new IllegalArgumentException("이미 최대인원 가득참");
-        }
+//        long participatedPersonnel = chatUserSubscriptionService.countByChatId(enter.getChatId());
+//
+//        if (chatRoomDTO.maxPersonnel().longValue() == participatedPersonnel) {
+//            throw new IllegalArgumentException("이미 최대인원 가득참");
+//        }
         // ... 여기까지 없어질 예정
 
         redisParticipantsService.participate(enter.getChatId(), username); // 접속 데이터 처리(NoSQL)
