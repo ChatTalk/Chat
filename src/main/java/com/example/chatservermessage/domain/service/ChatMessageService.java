@@ -47,6 +47,7 @@ public class ChatMessageService {
          *
          * 정확히는 구독 처리를 먼저 하되, 거기서 대기열로 제어
          */
+        graphqlService.incrementPersonnel(enter.getChatId(), username, role);
         chatUserSubscriptionService.subscribe(enter.getChatId(), username); // 구독 메타데이터 생성(대기열_
 
         /**
@@ -75,11 +76,12 @@ public class ChatMessageService {
         kafkaMessageService.send(dto);
     }
 
-    public void leave(ChatMessageDTO.Leave leave, Principal principal) {
-        redisParticipantsService.leave(leave.getChatId(), principal.getName());
-        chatUserSubscriptionService.unsubscribe(leave.getChatId(), principal.getName());
+    public void leave(ChatMessageDTO.Leave leave, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        redisParticipantsService.leave(leave.getChatId(), userDetails.getUsername());
+        graphqlService.decrementPersonnel(leave.getChatId(), userDetails.getUsername(), userDetails.getRole());
+        chatUserSubscriptionService.unsubscribe(leave.getChatId(), userDetails.getUsername());
 
-        ChatMessageDTO dto = new ChatMessageDTO(leave, principal.getName());
+        ChatMessageDTO dto = new ChatMessageDTO(leave, userDetails.getUsername());
         kafkaMessageService.send(dto);
     }
 }

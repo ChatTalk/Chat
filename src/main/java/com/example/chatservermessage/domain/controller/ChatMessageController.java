@@ -48,15 +48,15 @@ public class ChatMessageController {
 
     // 사용자의 채팅방 퇴장
     @MessageMapping(value = "/chat/leave")
-    public void leave(ChatMessageDTO.Leave leave, Principal principal) throws JsonProcessingException {
+    public void leave(ChatMessageDTO.Leave leave, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 퇴장 요청",
-                leave.getChatId(), principal.getName());
+                leave.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
-        chatReadService.deleteChatRoom(principal.getName(), leave.getChatId());
+        chatReadService.deleteChatRoom(userDetails.getUsername(), leave.getChatId());
 
 //        log.info("111여기까지는 아이디가 살아있나?: {}", leave.getChatId());
 
-        chatMessageService.leave(leave, principal);
+        chatMessageService.leave(leave, userDetails);
     }
 }

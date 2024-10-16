@@ -33,4 +33,43 @@ public class GraphqlService {
         return response;
     }
 
+    public ChatRoomDTO incrementPersonnel(String chatId, String email, String role) {
+        // GraphQL Mutation 쿼리 정의
+        String mutation = "mutation IncrementPersonnel($id: ID!) { incrementPersonnel(id: $id) { id title openUsername personnel maxPersonnel createdAt } }";
+
+        // GraphQL 요청 보내기
+        ChatRoomDTO response = webGraphQlClient
+                .mutate()
+                .header("email", email)  // 필요한 헤더 추가
+                .header("role", role)
+                .build()
+                .document(mutation)       // GraphQL mutation 설정
+                .variable("id", chatId)   // 변수로 chatId 전달
+                .retrieve("incrementPersonnel") // 반환 필드 설정
+                .toEntity(ChatRoomDTO.class)    // 응답을 ChatRoomDTO로 매핑
+                .block();  // 블로킹 방식 처리
+
+        log.info("graphql incrementPersonnel 응답: {}", response);
+
+        return response;
+    }
+
+    public ChatRoomDTO decrementPersonnel(String chatId, String email, String role) {
+        String mutation = "mutation DecrementPersonnel($id: ID!) { decrementPersonnel(id: $id) { id title openUsername personnel maxPersonnel createdAt } }";
+
+        ChatRoomDTO response = webGraphQlClient
+                .mutate()
+                .header("email", email)
+                .header("role", role)
+                .build()
+                .document(mutation)
+                .variable("id", chatId)
+                .retrieve("decrementPersonnel")
+                .toEntity(ChatRoomDTO.class)
+                .block();
+
+        log.info("graphql decrementPersonnel 응답: {}", response);
+
+        return response;
+    }
 }
