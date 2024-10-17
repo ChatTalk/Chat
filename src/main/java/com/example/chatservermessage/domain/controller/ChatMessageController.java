@@ -2,7 +2,6 @@ package com.example.chatservermessage.domain.controller;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.service.ChatMessageService;
-import com.example.chatservermessage.domain.service.ChatReadService;
 import com.example.chatservermessage.global.redis.RedisSubscribeService;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -22,7 +20,6 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_CHAT
 @RequiredArgsConstructor
 public class ChatMessageController {
 
-//    private final ChatReadService chatReadService;
     private final ChatMessageService chatMessageService;
     private final RedisSubscribeService redisSubscribeService;
 
@@ -33,7 +30,6 @@ public class ChatMessageController {
                 enter.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
-//        chatReadService.addChatRoom(userDetails.getUsername(), enter.getChatId());
         chatMessageService.enter(enter, userDetails);
     }
 
@@ -53,10 +49,6 @@ public class ChatMessageController {
                 leave.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
-//        chatReadService.deleteChatRoom(userDetails.getUsername(), leave.getChatId());
-
-//        log.info("111여기까지는 아이디가 살아있나?: {}", leave.getChatId());
-
         chatMessageService.leave(leave, userDetails);
     }
 }
