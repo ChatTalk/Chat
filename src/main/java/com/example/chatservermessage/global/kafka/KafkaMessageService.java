@@ -28,7 +28,7 @@ public class KafkaMessageService {
     private final RedisTemplate<String, Boolean> participatedTemplate;
     private final KafkaTemplate<String, ChatMessageDTO> kafkaTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
-    private final ChatReadService chatReadService;
+//    private final ChatReadService chatReadService;
 
     // producer
     public void send(ChatMessageDTO chatMessageDTO) {
@@ -59,18 +59,18 @@ public class KafkaMessageService {
      */
     public void listen(ChatMessageDTO dto) {
         log.info("채팅 메세지 수신: {}번 // {}", dto.getChatId(), dto.getMessage());
-        Map<Object, Object> entries
-                = participatedTemplate.opsForHash()
-                .entries(REDIS_PARTICIPATED_KEY + dto.getChatId());
-
-        entries.forEach((key, value) -> {
-            if (value == Boolean.FALSE) {
-                log.info("다른 채팅창에 있거나 접속하지 않은 유저: {}", key);
-                chatReadService.addUnreadMessage((String) key, dto.getChatId(), dto);
-            } else {
-                log.info("현재 접속 중인 유저: {}", key);
-            }
-        });
+//        Map<Object, Object> entries
+//                = participatedTemplate.opsForHash()
+//                .entries(REDIS_PARTICIPATED_KEY + dto.getChatId());
+//
+//        entries.forEach((key, value) -> {
+//            if (value == Boolean.FALSE) {
+//                log.info("다른 채팅창에 있거나 접속하지 않은 유저: {}", key);
+//                chatReadService.addUnreadMessage((String) key, dto.getChatId(), dto);
+//            } else {
+//                log.info("현재 접속 중인 유저: {}", key);
+//            }
+//        });
 
         messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }

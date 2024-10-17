@@ -1,5 +1,6 @@
 package com.example.chatservermessage.domain.dto;
 
+import com.example.chatservermessage.domain.entity.ChatMessage;
 import com.example.chatservermessage.domain.entity.ChatMessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,6 +43,14 @@ public class ChatMessageDTO {
         this.username = username;
         this.message = username + " 님이 퇴장하셨습니다.";
         this.createdAt = LocalDateTime.now();
+    }
+
+    public ChatMessageDTO(ChatMessage chatMessage) {
+        this.chatId = chatMessage.getChatId();
+        this.type = chatMessage.getType();
+        this.username = chatMessage.getUsername();
+        this.message = chatMessage.getMessage();
+        this.createdAt = chatMessage.getCreatedAt();
     }
 
     @Getter

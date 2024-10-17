@@ -22,7 +22,7 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_CHAT
 @RequiredArgsConstructor
 public class ChatMessageController {
 
-    private final ChatReadService chatReadService;
+//    private final ChatReadService chatReadService;
     private final ChatMessageService chatMessageService;
     private final RedisSubscribeService redisSubscribeService;
 
@@ -33,7 +33,7 @@ public class ChatMessageController {
                 enter.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
-        chatReadService.addChatRoom(userDetails.getUsername(), enter.getChatId());
+//        chatReadService.addChatRoom(userDetails.getUsername(), enter.getChatId());
         chatMessageService.enter(enter, userDetails);
     }
 
@@ -53,7 +53,7 @@ public class ChatMessageController {
                 leave.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
-        chatReadService.deleteChatRoom(userDetails.getUsername(), leave.getChatId());
+//        chatReadService.deleteChatRoom(userDetails.getUsername(), leave.getChatId());
 
 //        log.info("111여기까지는 아이디가 살아있나?: {}", leave.getChatId());
 
