@@ -2,7 +2,6 @@ package com.example.chatservermessage.domain.controller;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
 import com.example.chatservermessage.domain.service.ChatMessageService;
-import com.example.chatservermessage.domain.service.ChatReadService;
 import com.example.chatservermessage.global.redis.RedisSubscribeService;
 import com.example.chatservermessage.global.user.UserDetailsImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -22,7 +20,6 @@ import static com.example.chatservermessage.global.constant.Constants.REDIS_CHAT
 @RequiredArgsConstructor
 public class ChatMessageController {
 
-    private final ChatReadService chatReadService;
     private final ChatMessageService chatMessageService;
     private final RedisSubscribeService redisSubscribeService;
 
@@ -33,7 +30,6 @@ public class ChatMessageController {
                 enter.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.subscribe(REDIS_CHAT_PREFIX + enter.getChatId());
-        chatReadService.addChatRoom(userDetails.getUsername(), enter.getChatId());
         chatMessageService.enter(enter, userDetails);
     }
 
@@ -48,15 +44,11 @@ public class ChatMessageController {
 
     // 사용자의 채팅방 퇴장
     @MessageMapping(value = "/chat/leave")
-    public void leave(ChatMessageDTO.Leave leave, Principal principal) throws JsonProcessingException {
+    public void leave(ChatMessageDTO.Leave leave, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         log.info("{}번 채팅방에서 클라이언트로부터 {} 회원이 퇴장 요청",
-                leave.getChatId(), principal.getName());
+                leave.getChatId(), userDetails.getUsername());
 
         redisSubscribeService.unsubscribe(REDIS_CHAT_PREFIX + leave.getChatId());
-        chatReadService.deleteChatRoom(principal.getName(), leave.getChatId());
-
-//        log.info("111여기까지는 아이디가 살아있나?: {}", leave.getChatId());
-
-        chatMessageService.leave(leave, principal);
+        chatMessageService.leave(leave, userDetails);
     }
 }

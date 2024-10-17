@@ -4,6 +4,21 @@ type ChatUserSubscription {
     email: String!
 }
 
+type GraphqlChatMessageDTO {
+    chatId: String!
+    type: ChatMessageType!
+    username: String!
+    message: String!
+    createdAt: String!
+}
+
+enum ChatMessageType {
+    ENTER
+    LEAVE
+    MESSAGE
+}
+
 type Query {
     subscriptionsByEmail(email: String!): [ChatUserSubscription!]!
+    getChatMessages(chatId: String!, exitTime: String!): [GraphqlChatMessageDTO]
 }

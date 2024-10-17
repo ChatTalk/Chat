@@ -1,6 +1,6 @@
 package com.example.chatservermessage.domain.service;
 
-import com.example.chatservermessage.domain.dto.GraphqlDTO;
+import com.example.chatservermessage.domain.dto.GraphqlSubscriptionDTO;
 import com.example.chatservermessage.domain.entity.ChatUserSubscription;
 import com.example.chatservermessage.domain.repository.ChatUserSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class ChatUserSubscriptionService {
     }
 
     // 개별 이메일 당 구독 리스트 들고 오기
-    public List<GraphqlDTO> getSubscriptions(String email) {
+    public List<GraphqlSubscriptionDTO> getSubscriptions(String email) {
         log.info("그래프큐엘 이메일: {}", email);
 
         List<ChatUserSubscription> subscriptions = chatUserSubscriptionRepository.findByEmail(email);
@@ -44,19 +44,19 @@ public class ChatUserSubscriptionService {
 
         return chatUserSubscriptionRepository.findByEmail(email).
                 stream()
-                .map(e -> new GraphqlDTO(e.getId().toString(), e.getChatId(), e.getEmail()))
+                .map(e -> new GraphqlSubscriptionDTO(e.getId().toString(), e.getChatId(), e.getEmail()))
                 .toList();
     }
 
-    // 구독 리스트 길이 갖고오기
-
-    /**
-     * 말했듯이 임시 로직
-     * 대기열 구현하고 나서 사라질 예정
-     * @param chatId
-     * @return
-     */
-    public long countByChatId(String chatId) {
-        return chatUserSubscriptionRepository.countByChatId(chatId);
-    }
+//    // 구독 리스트 길이 갖고오기
+//
+//    /**
+//     * 말했듯이 임시 로직
+//     * 대기열 구현하고 나서 사라질 예정
+//     * @param chatId
+//     * @return
+//     */
+//    public long countByChatId(String chatId) {
+//        return chatUserSubscriptionRepository.countByChatId(chatId);
+//    }
 }

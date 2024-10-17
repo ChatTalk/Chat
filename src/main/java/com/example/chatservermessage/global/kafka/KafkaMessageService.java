@@ -1,22 +1,15 @@
 package com.example.chatservermessage.global.kafka;
 
 import com.example.chatservermessage.domain.dto.ChatMessageDTO;
-import com.example.chatservermessage.domain.service.ChatReadService;
-import com.example.chatservermessage.global.user.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Map;
 
 import static com.example.chatservermessage.global.constant.Constants.*;
 
@@ -25,10 +18,8 @@ import static com.example.chatservermessage.global.constant.Constants.*;
 @RequiredArgsConstructor
 public class KafkaMessageService {
 
-    private final RedisTemplate<String, Boolean> participatedTemplate;
     private final KafkaTemplate<String, ChatMessageDTO> kafkaTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
-    private final ChatReadService chatReadService;
 
     // producer
     public void send(ChatMessageDTO chatMessageDTO) {
@@ -59,18 +50,18 @@ public class KafkaMessageService {
      */
     public void listen(ChatMessageDTO dto) {
         log.info("채팅 메세지 수신: {}번 // {}", dto.getChatId(), dto.getMessage());
-        Map<Object, Object> entries
-                = participatedTemplate.opsForHash()
-                .entries(REDIS_PARTICIPATED_KEY + dto.getChatId());
-
-        entries.forEach((key, value) -> {
-            if (value == Boolean.FALSE) {
-                log.info("다른 채팅창에 있거나 접속하지 않은 유저: {}", key);
-                chatReadService.addUnreadMessage((String) key, dto.getChatId(), dto);
-            } else {
-                log.info("현재 접속 중인 유저: {}", key);
-            }
-        });
+//        Map<Object, Object> entries
+//                = participatedTemplate.opsForHash()
+//                .entries(REDIS_PARTICIPATED_KEY + dto.getChatId());
+//
+//        entries.forEach((key, value) -> {
+//            if (value == Boolean.FALSE) {
+//                log.info("다른 채팅창에 있거나 접속하지 않은 유저: {}", key);
+//                chatReadService.addUnreadMessage((String) key, dto.getChatId(), dto);
+//            } else {
+//                log.info("현재 접속 중인 유저: {}", key);
+//            }
+//        });
 
         messagingTemplate.convertAndSend(CHAT_DESTINATION + dto.getChatId(), dto);
     }
